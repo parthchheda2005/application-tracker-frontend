@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,8 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState<string | null>("");
+
+  const router = useRouter();
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -36,6 +39,12 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function redirectToCreateUser() {
+    setLoading(true);
+    router.push("/create-account");
+    setLoadingMessage("Redirecting to user creation page...");
   }
 
   return (
@@ -82,7 +91,12 @@ export default function LoginPage() {
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? <>{loadingMessage}</> : "Login"}
           </Button>
-          <Button type="submit" disabled={loading} className="w-full">
+          <Button
+            type="button"
+            onClick={redirectToCreateUser}
+            disabled={loading}
+            className="w-full"
+          >
             {loading ? <>{loadingMessage}</> : "Create User"}
           </Button>
         </div>
