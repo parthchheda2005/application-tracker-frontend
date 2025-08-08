@@ -16,36 +16,33 @@ export default function LoginPage() {
 
   const router = useRouter();
 
-  async function handleLogin(e: React.FormEvent) {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    // todo: redirects
     try {
       const res = await api.post("/auth/login", { email, password });
 
       if (!res) {
-        throw new Error(data.message || "Login failed");
+        throw new Error(res.data.message || "Login failed");
       }
 
-      localStorage.setItem("token", res.token);
+      localStorage.setItem("token", res.data.token);
 
       setLoadingMessage("Login Successful...");
-
-      alert("Login successful!");
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  function redirectToCreateUser() {
+  const redirectToCreateUser = () => {
     setLoading(true);
-    router.push("/create-account");
+    router.push("/signup");
     setLoadingMessage("Redirecting to user creation page...");
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-background">
