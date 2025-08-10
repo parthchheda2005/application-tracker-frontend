@@ -28,6 +28,7 @@ const LoginPage = () => {
         throw new Error("Login failed");
       }
 
+      console.log(res);
       localStorage.setItem("token", res.data.token);
       setLoadingMessage("Login Successful...");
       router.push("/menu");

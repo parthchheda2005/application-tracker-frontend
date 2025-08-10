@@ -121,6 +121,7 @@ export default function ApplicationsPage() {
       setApplications((prev) =>
         prev.map((app) => (app.id === id ? { ...app, status: newStatus } : app))
       );
+      fetchApplications();
     } catch (err) {
       console.error(err);
     }
