@@ -23,11 +23,10 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Pencil } from "lucide-react";
-import axios from "axios";
+import { Plus, Pencil, Trash2 } from "lucide-react";
+import api from "@/lib/app";
 
 interface Resume {
   id: number;
@@ -37,54 +36,33 @@ interface Resume {
   updatedAt: string;
 }
 
-const sampleResumes = [
-  {
-    id: 1,
-    name: "Software Engineer Resume",
-    azureBlobPath:
-      "https://yourblobstorage.blob.core.windows.net/resumes/software-engineer.pdf",
-    createdAt: "2024-07-20T10:15:30Z",
-    updatedAt: "2024-08-05T12:00:00Z",
-  },
-  {
-    id: 2,
-    name: "Data Scientist Resume",
-    azureBlobPath:
-      "https://yourblobstorage.blob.core.windows.net/resumes/data-scientist.pdf",
-    createdAt: "2024-06-15T09:00:00Z",
-    updatedAt: "2024-06-20T16:30:00Z",
-  },
-  {
-    id: 3,
-    name: "Product Manager Resume",
-    azureBlobPath:
-      "https://yourblobstorage.blob.core.windows.net/resumes/product-manager.pdf",
-    createdAt: "2024-01-10T08:45:00Z",
-    updatedAt: "2024-03-12T14:20:00Z",
-  },
-  {
-    id: 4,
-    name: "Internship Resume",
-    azureBlobPath:
-      "https://yourblobstorage.blob.core.windows.net/resumes/internship.pdf",
-    createdAt: "2023-12-01T11:00:00Z",
-    updatedAt: "2024-01-15T10:30:00Z",
-  },
-];
-
 const Resumes = () => {
-  const [resumes, setResumes] = useState<Resume[]>(sampleResumes);
+  const [resumes, setResumes] = useState<Resume[]>([]);
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [name, setName] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [editResumeId, setEditResumeId] = useState<number | null>(null);
+  const [resumeToDelete, setResumeToDelete] = useState<Resume | null>(null);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleOpenResume = async (fileName: string) => {
+    try {
+      const res = await api.get(`/blob/${fileName}`);
+      window.open(res.data.data, "_blank");
+    } catch (error) {
+      console.error("Failed to open resume: ", error);
+    }
+  };
 
   const fetchResumes = async () => {
     try {
-      const res = await axios.get("/resume");
+      const res = await api.get("/resume");
+      console.log(res);
       if (res.data.success) {
         setResumes(res.data.data);
+        console.log(res.data.data);
       }
     } catch (err) {
       console.error("Error fetching resumes:", err);
@@ -95,30 +73,28 @@ const Resumes = () => {
     fetchResumes();
   }, []);
 
-  const handleOpenResume = (path: string) => {
-    window.open(path, "_blank");
-  };
-
   const uploadFileAndGetUrl = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
 
-    // Replace with your actual upload endpoint
-    const uploadRes = await axios.post("/upload", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+    const uploadRes = await api.post("/blob", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     });
 
-    return uploadRes.data.url;
+    return uploadRes.data.data;
   };
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) return alert("Please select a file");
 
+    setLoading(true);
     try {
       const azureBlobPath = await uploadFileAndGetUrl(file);
 
-      await axios.post("/resume", { name, azureBlobPath });
+      await api.post("/resume", { name, azureBlobPath });
 
       setOpenCreate(false);
       setName("");
@@ -127,27 +103,27 @@ const Resumes = () => {
     } catch (err) {
       console.error("Error creating resume:", err);
     }
-  };
-
-  const handleEditClick = (resume: Resume) => {
-    setEditResumeId(resume.id);
-    setName(resume.name);
-    setFile(null); // Optional: user can leave file unchanged
-    setOpenEdit(true);
+    setLoading(false);
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     try {
       let azureBlobPath: string | undefined;
+
+      if (!editResumeId) {
+        console.error("No resume selected for edit");
+        return;
+      }
 
       if (file) {
         azureBlobPath = await uploadFileAndGetUrl(file);
       }
 
-      await axios.put(`/resume/${editResumeId}`, {
+      await api.put(`/resume/${editResumeId}`, {
         name,
-        azureBlobPath, // If file not updated, backend can keep old path
+        azureBlobPath,
       });
 
       setOpenEdit(false);
@@ -158,6 +134,38 @@ const Resumes = () => {
     } catch (err) {
       console.error("Error updating resume:", err);
     }
+    setLoading(false);
+  };
+
+  const handleEditClick = (resume: Resume) => {
+    setEditResumeId(resume.id);
+    setName(resume.name);
+    setFile(null);
+    setOpenEdit(true);
+  };
+
+  const handleDeleteClick = (resume: Resume) => {
+    setResumeToDelete(resume);
+    setOpenDelete(true);
+  };
+
+  const deleteResume = async (resume: Resume | null) => {
+    if (!resume) return;
+    setLoading(true);
+    try {
+      await api.delete(`/resume/${resume.id}`);
+      setOpenDelete(false);
+      setResumeToDelete(null);
+      fetchResumes();
+    } catch (error) {
+      console.error("Error deleting resume: ", error);
+    }
+    setLoading(false);
+  };
+
+  const cancelDelete = () => {
+    setOpenDelete(false);
+    setResumeToDelete(null);
   };
 
   return (
@@ -177,7 +185,7 @@ const Resumes = () => {
         </BreadcrumbList>
       </Breadcrumb>
 
-      {/* Header */}
+      {/** Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Resumes</h1>
         <Dialog open={openCreate} onOpenChange={setOpenCreate}>
@@ -187,28 +195,35 @@ const Resumes = () => {
               Create Resume
             </Button>
           </DialogTrigger>
+          {/** Create Resume dialogue */}
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create Resume</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleCreateSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name" className="my-2">
+                  Name
+                </Label>
                 <Input
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
+                  disabled={loading}
                 />
               </div>
               <div>
-                <Label htmlFor="file">Upload Resume</Label>
+                <Label htmlFor="file" className="my-2">
+                  Upload Resume
+                </Label>
                 <Input
                   id="file"
                   type="file"
                   accept=".pdf,.doc,.docx"
                   onChange={(e) => setFile(e.target.files?.[0] || null)}
                   required
+                  disabled={loading}
                 />
               </div>
               <Button type="submit" className="w-full">
@@ -219,14 +234,14 @@ const Resumes = () => {
         </Dialog>
       </div>
 
-      {/* Resume List */}
-      {resumes.length === 0 ? (
+      {/** Resume List */}
+      {resumes?.length === 0 ? (
         <p className="text-gray-500">
           No resumes found. Create your first one!
         </p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {resumes.map((resume) => (
+          {resumes?.map((resume) => (
             <Card
               key={resume.id}
               className="cursor-pointer hover:shadow-lg transition-shadow"
@@ -239,6 +254,7 @@ const Resumes = () => {
                     variant="ghost"
                     size="sm"
                     className="h-8 w-8 p-0"
+                    disabled={loading}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleEditClick(resume);
@@ -251,18 +267,55 @@ const Resumes = () => {
                   Created: {new Date(resume.createdAt).toLocaleDateString()}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex justify-between items-center">
                 <p className="text-sm text-gray-600">
                   Last updated:{" "}
                   {new Date(resume.updatedAt).toLocaleDateString()}
                 </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  disabled={loading}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteClick(resume);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
 
-      {/* Edit Dialog */}
+      {/** Delete Confirmation Dialog */}
+      <Dialog open={openDelete} onOpenChange={setOpenDelete}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+          </DialogHeader>
+          <p className="mb-4">
+            Are you sure you want to delete{" "}
+            <strong>{resumeToDelete?.name}</strong>?
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={cancelDelete} disabled={loading}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => deleteResume(resumeToDelete)}
+              disabled={loading}
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/** Edit Dialog */}
       <Dialog open={openEdit} onOpenChange={setOpenEdit}>
         <DialogContent>
           <DialogHeader>
@@ -270,24 +323,30 @@ const Resumes = () => {
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="editName">Name</Label>
+              <Label htmlFor="editName" className="my-2">
+                Name
+              </Label>
               <Input
                 id="editName"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
             <div>
-              <Label htmlFor="editFile">Replace Resume (optional)</Label>
+              <Label htmlFor="editFile" className="my-2">
+                Replace Resume (optional)
+              </Label>
               <Input
                 id="editFile"
                 type="file"
                 accept=".pdf,.doc,.docx"
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
+                disabled={loading}
               />
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={loading}>
               Update
             </Button>
           </form>
