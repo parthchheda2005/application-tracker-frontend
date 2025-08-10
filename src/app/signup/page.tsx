@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
-export default function LoginPage() {
+const SignupPage = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
@@ -15,7 +16,7 @@ export default function LoginPage() {
   const [lastName, setLastName] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState<string | null>("");
+  const [loadingMessage, setLoadingMessage] = useState<string>("");
 
   const router = useRouter();
 
@@ -36,7 +37,7 @@ export default function LoginPage() {
       });
 
       if (!res) {
-        throw new Error(res.data.message || "Signup failed");
+        throw new Error("Signup failed");
       }
 
       setLoadingMessage("Sign Up Successful...");
@@ -135,7 +136,9 @@ export default function LoginPage() {
           />
 
           {error && (
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+              {error}
+            </p>
           )}
 
           <div className="flex flex-col gap-3.5 mt-6">
@@ -146,13 +149,17 @@ export default function LoginPage() {
               type="button"
               onClick={redirectToLonginPage}
               disabled={loading}
-              className="w-full"
+              variant="ghost"
+              className="w-full flex items-center justify-center gap-2"
             >
-              {loading ? <>{loadingMessage}</> : "Login Page"}
+              <ArrowLeft className="h-4 w-4" />
+              {loading ? <>{loadingMessage}</> : "Back to Login"}
             </Button>
           </div>
         </div>
       </form>
     </div>
   );
-}
+};
+
+export default SignupPage;

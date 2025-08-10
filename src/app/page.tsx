@@ -7,12 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import api from "@/lib/app";
 
-export default function LoginPage() {
-  const [email, setEmail] = useState<string | null>("");
-  const [password, setPassword] = useState<string | null>("");
+const LoginPage = () => {
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState<string | null>("");
+  const [loadingMessage, setLoadingMessage] = useState<string>("");
 
   const router = useRouter();
 
@@ -25,11 +25,10 @@ export default function LoginPage() {
       const res = await api.post("/auth/login", { email, password });
 
       if (!res) {
-        throw new Error(res.data.message || "Login failed");
+        throw new Error("Login failed");
       }
 
       localStorage.setItem("token", res.data.token);
-
       setLoadingMessage("Login Successful...");
     } catch (err: any) {
       setError(err.message);
@@ -100,4 +99,6 @@ export default function LoginPage() {
       </form>
     </div>
   );
-}
+};
+
+export default LoginPage;
