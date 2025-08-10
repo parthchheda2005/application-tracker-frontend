@@ -221,8 +221,7 @@ export default function ApplicationsPage() {
 
       {/* Add/Edit Dialog */}
       <div className="flex justify-between items-center">
-        {" "}
-        <h2 className="text-xl font-semibold">Applications</h2>
+        <h1 className="text-2xl font-bold">Applications</h1>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button
