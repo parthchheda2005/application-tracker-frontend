@@ -199,6 +199,11 @@ const Resumes = () => {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create Resume</DialogTitle>
+              <p className="text-sm text-red-600">
+                Please remove any personal information from your resume before
+                uploading it, we use LLM queries to rate and review it and they
+                may use your information for training purposes
+              </p>
             </DialogHeader>
             <form onSubmit={handleCreateSubmit} className="space-y-4">
               <div>
@@ -320,6 +325,11 @@ const Resumes = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Resume</DialogTitle>
+            <p className="text-sm text-red-600">
+              Please remove any personal information from your resume before
+              uploading it, we use LLM queries to rate and review it and they
+              may use your information for training purposes
+            </p>
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4">
             <div>

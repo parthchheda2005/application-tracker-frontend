@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import api from "@/lib/app";
 import { useEffect, useState } from "react";
 import {
@@ -44,6 +45,13 @@ const Analytics = ({}) => {
   const [pieChartDataOfferInterviewRate, setPieChartDataOfferInterviewRate] =
     useState([]);
   const [chartData, setChartData] = useState([]);
+  const [resumeRating, setResumeRating] = useState({
+    rating: 0,
+    pros: [],
+    improvements: [],
+  });
+
+  const [isLoadingResumeRating, setIsLoadingResumeRating] = useState(false);
 
   useEffect(() => {
     const getData = async () => {
@@ -57,8 +65,13 @@ const Analytics = ({}) => {
         setChartData(last7Days.data);
         setPieChartDataApplications(applicationByStatus.data);
         setPieChartDataOfferInterviewRate(resumeInterviewOffer.data);
+        setIsLoadingResumeRating(true);
+        const resumeRatingData = await api.get("/analytics/resume-rating");
+        setResumeRating(resumeRatingData.data);
       } catch (error) {
         console.error("There was an error in fetching applications", error);
+      } finally {
+        setIsLoadingResumeRating(false);
       }
     };
     getData();
@@ -92,33 +105,83 @@ const Analytics = ({}) => {
       {/* Header */}
       <h1 className="text-2xl font-bold">Analytics</h1>
 
-      {/* Applications for past 7 days */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Applications Submitted</CardTitle>
-          <CardDescription>Over the Last 7 Days</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="max-h-72" style={{ height: 288 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={chartData}
-                margin={{ top: 20, right: 30, left: 40, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" padding={{ left: 20, right: 20 }} />
-                <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="count"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col md:flex-row md:space-x-6 space-y-6 md:space-y-0">
+        {/* Applications for past 7 days */}
+        <Card className="flex-1">
+          <CardHeader>
+            <CardTitle>Applications Submitted</CardTitle>
+            <CardDescription>Over the Last 7 Days</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="max-h-72" style={{ height: 288 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={chartData}
+                  margin={{ top: 20, right: 30, left: 40, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" padding={{ left: 20, right: 20 }} />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Resume Rating */}
+        <Card className="flex-1 ">
+          <CardHeader>
+            <CardTitle>AI Resume Rating</CardTitle>
+            <CardDescription>
+              From the resume used in the most recent application
+            </CardDescription>
+          </CardHeader>
+          {isLoadingResumeRating ? (
+            <div className="flex justify-center items-center flex-col gap-0 h-full">
+              <LoadingSpinner />
+              <p>Loading content...</p>
+            </div>
+          ) : (
+            <CardContent>
+              <div className="max-h-72 overflow-y-auto pr-2 pb-3">
+                <h2 className="text-lg font-semibold mb-2">
+                  Overall Score: {resumeRating.rating}/100
+                </h2>
+                <div className="mb-4">
+                  <h3 className="text-md font-semibold mb-1">Pros:</h3>
+                  {resumeRating.pros.length > 0 ? (
+                    <ul className="list-disc list-inside">
+                      {resumeRating.pros.map((pro, index) => (
+                        <li key={index}>{pro}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500">No pros available.</p>
+                  )}
+                </div>
+                <div className="mb-4">
+                  <h3 className="text-md font-semibold mb-1">Improvements:</h3>
+                  {resumeRating.improvements.length > 0 ? (
+                    <ul className="list-disc list-inside">
+                      {resumeRating.improvements.map((pro, index) => (
+                        <li key={index}>{pro}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500">No improvements available.</p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          )}
+        </Card>
+      </div>
 
       {/* Side-by-side Pie Charts */}
       <div className="flex flex-col md:flex-row md:space-x-6 space-y-6 md:space-y-0">
