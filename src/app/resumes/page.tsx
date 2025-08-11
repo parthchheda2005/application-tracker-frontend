@@ -220,7 +220,7 @@ const Resumes = () => {
                 <Input
                   id="file"
                   type="file"
-                  accept=".pdf,.doc,.docx"
+                  accept=".pdf,.docx"
                   onChange={(e) => setFile(e.target.files?.[0] || null)}
                   required
                   disabled={loading}
@@ -341,7 +341,7 @@ const Resumes = () => {
               <Input
                 id="editFile"
                 type="file"
-                accept=".pdf,.doc,.docx"
+                accept=".pdf,.docx"
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
                 disabled={loading}
               />
