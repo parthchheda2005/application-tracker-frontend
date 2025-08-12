@@ -46,7 +46,10 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background">
+      <h1 className="text-4xl font-bold m-1 max-w-96 text-center">
+        Welcome to your Job Application Tracker.
+      </h1>
       <form
         onSubmit={handleLogin}
         className="w-full max-w-md space-y-6 bg-white dark:bg-gray-900 p-8 rounded-lg shadow-md"
