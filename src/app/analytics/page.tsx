@@ -54,6 +54,7 @@ interface PieChartEntry {
 
 const Analytics = () => {
   const [hasApplication, setHasApplication] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [pieChartDataApplications, setPieChartDataApplications] = useState<
     PieChartEntry[]
   >([]);
@@ -71,6 +72,7 @@ const Analytics = () => {
   useEffect(() => {
     const getData = async () => {
       try {
+        setIsLoading(true);
         const hasApplicationsRes = await api.get("/analytics/has-applications");
         if (!hasApplicationsRes.data) {
           throw new Error("No applications found");
@@ -94,6 +96,7 @@ const Analytics = () => {
         setHasApplication(false);
       } finally {
         setIsLoadingResumeRating(false);
+        setIsLoading(false);
       }
     };
     getData();
@@ -106,6 +109,37 @@ const Analytics = () => {
   const isFirstPieEmpty =
     Array.isArray(pieChartDataApplications) &&
     pieChartDataApplications.every((entry) => entry.count === 0);
+
+  // Show loading state while initial data is being fetched
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-6">
+        {/* Breadcrumb */}
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/menu">Menu</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/analytics" className="font-semibold">
+                Analytics
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        {/* Header */}
+        <h1 className="text-2xl font-bold">Analytics</h1>
+
+        {/* Loading state */}
+        <div className="flex justify-center items-center flex-col gap-4 h-96">
+          <LoadingSpinner />
+          <p className="text-lg">Loading your analytics data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
