@@ -32,8 +32,8 @@ const LoginPage = () => {
       localStorage.setItem("token", res.data.token);
       setLoadingMessage("Login Successful...");
       router.push("/menu");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }

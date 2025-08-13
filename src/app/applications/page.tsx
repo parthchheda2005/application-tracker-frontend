@@ -86,7 +86,7 @@ export default function ApplicationsPage() {
     const fetchResumes = async () => {
       setLoadingResumes(true);
       try {
-        const res = await api.get<{ success: boolean; data: any[] }>("/resume");
+        const res = await api.get<{ success: boolean; data: [] }>("/resume");
         if (res.data.success) {
           setResumes(res.data.data);
         }

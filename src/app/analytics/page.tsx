@@ -59,7 +59,7 @@ const Analytics = () => {
   >([]);
   const [pieChartDataOfferInterviewRate, setPieChartDataOfferInterviewRate] =
     useState<PieChartEntry[]>([]);
-  const [chartData, setChartData] = useState<any[]>([]);
+  const [chartData, setChartData] = useState([]);
   const [resumeRating, setResumeRating] = useState<ResumeRating>({
     rating: 0,
     pros: [],
